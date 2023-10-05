@@ -181,7 +181,6 @@ void StoreExternalIndexBlockMapGroup(Relation             index,
         while (1) {
             if(node_id >= first_node_index + num_added_vectors) break;
             pointer_label = extract_label(data, *progress);
-            elog(LOG, "pointer_label=0x%lx", pointer_label);
             itup = (IndexTuple)pointer_label;
             itup_size = MAXALIGN(IndexTupleSize(itup));
             // note: even if the condition is false, nodepage may be too large
@@ -197,7 +196,6 @@ void StoreExternalIndexBlockMapGroup(Relation             index,
                                 &metadata,
                                 /*->>output*/ &node_size,
                                 &node_level);
-            elog(LOG, "progress=%d node_size=%d", *progress, node_size);
             bufferpage->id = node_id;
             bufferpage->level = node_level;
             bufferpage->size = node_size;
@@ -231,9 +229,6 @@ void StoreExternalIndexBlockMapGroup(Relation             index,
             // the label is at the very beginning of bufferpage->node
             bufferpage_inside_page = (HnswIndexTuple *)PageGetItem(page, PageGetItemId(page, inserted_at));
             memcpy(&bufferpage_inside_page->node, &label, sizeof(label));
-
-            elog(LOG, "StoreExternalIndexBlockMapGroup(): new_item_pointer=(%u, %hu)",
-                 ItemPointerGetBlockNumber(new_item_pointer), ItemPointerGetOffsetNumber(new_item_pointer));
 
             // we successfully recorded the node. move to the next one
             l_wal_retriever_block_numbers[ node_id - first_node_index ] = BufferGetBlockNumber(buf);
@@ -520,9 +515,6 @@ HnswIndexTuple *PrepareIndexTuple(Relation             index_rel,
     }
 
     ItemPointerSet(new_tuple_item_pointer, new_vector_blockno, new_tup_at);
-    elog(LOG, "PrepareIndexTuple(): heap_tid=(%u, %hu) new_tuple_item_pointer=(%u, %hu)",
-         ItemPointerGetBlockNumber(heap_tid), ItemPointerGetOffsetNumber(heap_tid),
-         ItemPointerGetBlockNumber(new_tuple_item_pointer), ItemPointerGetOffsetNumber(new_tuple_item_pointer));
     /*** extract the inserted tuple ref to return so usearch can do further work on it ***/
     new_tup_ref = (HnswIndexTuple *)PageGetItem(page, PageGetItemId(page, new_tup_at));
     assert(new_tup_ref->id == new_tuple_id);

@@ -17,7 +17,6 @@
 
 bool ldb_amcanreturn(Relation indexRelation, int attno)
 {
-    elog(LOG, "ldb_amcanreturn(..., %d)", attno);
     LDB_UNUSED(indexRelation);
     return true;
 }
@@ -34,7 +33,6 @@ IndexScanDesc ldb_ambeginscan(Relation index, int nkeys, int norderbys)
     usearch_init_options_t opts;
     RetrieverCtx          *retriever_ctx = ldb_wal_retriever_area_init(index, NULL);
 
-    elog(LOG, "ldb_ambeginscan()");
     scan = RelationGetIndexScan(index, nkeys, norderbys);
 
     // ** initialize usearch data structures and set up external retriever
@@ -111,7 +109,6 @@ void ldb_amendscan(IndexScanDesc scan)
     //  on the buffer we have last returned.
     //  make sure to release that pin here
 
-    elog(LOG, "ldb_amendscan()");
 #ifdef LANTERN_USE_LIBHNSW
     if(scanstate->hnsw) hnsw_destroy(scanstate->hnsw);
 #endif
@@ -173,7 +170,6 @@ bool ldb_amgettuple(IndexScanDesc scan, ScanDirection dir)
     // about the furtheest neighbors
     Assert(ScanDirectionIsForward(dir));
 
-    elog(LOG, "ldb_amgettuple() xs_want_itup=%d", !!scan->xs_want_itup);
     if(scanstate->first) {
         int             num_returned;
         Datum           value;
@@ -276,8 +272,6 @@ bool ldb_amgettuple(IndexScanDesc scan, ScanDirection dir)
         bool             first_isnull;
 
 
-        elog(LOG, "ldb_amgettuple(): item_ptr=(%u, %hu)",
-             ItemPointerGetBlockNumber(item_ptr), ItemPointerGetOffsetNumber(item_ptr));
         assert(itup_desc->natts == tupleDesc->natts);
 
         buf = ReadBuffer(scan->indexRelation, BlockIdGetBlockNumber(&item_ptr->ip_blkid));
@@ -312,8 +306,6 @@ bool ldb_amgettuple(IndexScanDesc scan, ScanDirection dir)
         label = DatumGetUInt64(index_getattr(itup, 1, itup_desc, &first_isnull));
         assert(!first_isnull);
         UsearchLabel2ItemPointer(label, &current_iptr_data);
-        elog(LOG, "ldb_amgettuple(): current_iptr_data=(%u, %hu)",
-             ItemPointerGetBlockNumber(&current_iptr_data), ItemPointerGetOffsetNumber(&current_iptr_data));
 
 #if PG_VERSION_NUM >= 120000
         scan->xs_heaptid = current_iptr_data;

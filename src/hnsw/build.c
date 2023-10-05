@@ -90,7 +90,6 @@ static void AddTupleToUsearchIndex(ItemPointer tid, Datum *values, bool *isnull,
 
     // during the build usearch label points to in-memory non-key IndexTuple for the vector
     usearch_label_t label = (usearch_label_t)itup;
-    elog(LOG, "AddTupleToUsearchIndex(): label=0x%lx tid=(%u, %hu)", label, ItemPointerGetBlockNumber(tid), ItemPointerGetOffsetNumber(tid));
 #ifdef LANTERN_USE_LIBHNSW
     if(buildstate->hnsw != NULL) hnsw_add(buildstate->hnsw, vector, label);
 #endif
@@ -420,9 +419,6 @@ static void BuildIndex(
     usearch_init_options_t opts;
     MemSet(&opts, 0, sizeof(opts));
 
-    elog(LOG, "BuildIndex(): index->rd_index->indnatts=%u", index->rd_index->indnatts);
-    elog(LOG, "BuildIndex(): indexInfo->ii_NumIndexAttrs=%d", indexInfo->ii_NumIndexAttrs);
-    elog(LOG, "BuildIndex(): indexInfo->ii_NumIndexKeyAttrs=%d", indexInfo->ii_NumIndexKeyAttrs);
     InitBuildState(buildstate, heap, index, indexInfo);
     opts.dimensions = buildstate->dimensions;
     PopulateUsearchOpts(index, &opts);
@@ -432,7 +428,6 @@ static void BuildIndex(
     assert(error == NULL);
 
     buildstate->hnsw = NULL;
-    elog(LOG, "BuildIndex(): buildstate->index_file_path=%s", buildstate->index_file_path);
     if(buildstate->index_file_path) {
         if(access(buildstate->index_file_path, F_OK) != 0) {
             ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg("Invalid index file path ")));
@@ -481,7 +476,7 @@ static void BuildIndex(
         UpdateProgress(PROGRESS_CREATEIDX_PHASE, PROGRESS_HNSW_PHASE_IN_MEMORY_INSERT);
         LanternBench("build hnsw index", ScanTable(buildstate));
 
-        elog(LOG, "inserted %ld elements", usearch_size(buildstate->usearch_index, &error));
+        elog(INFO, "inserted %ld elements", usearch_size(buildstate->usearch_index, &error));
         assert(error == NULL);
     }
 
@@ -492,7 +487,7 @@ static void BuildIndex(
     size_t num_added_vectors = usearch_size(buildstate->usearch_index, &error);
     assert(error == NULL);
 
-    elog(LOG, "done saving %ld vectors", num_added_vectors);
+    elog(INFO, "done saving %ld vectors", num_added_vectors);
 
     //****************************** saving to WAL BEGIN ******************************//
     UpdateProgress(PROGRESS_CREATEIDX_PHASE, PROGRESS_HNSW_PHASE_LOAD);
@@ -516,8 +511,6 @@ IndexBuildResult *ldb_ambuild(Relation heap, Relation index, IndexInfo *indexInf
     IndexBuildResult *result;
     HnswBuildState    buildstate;
 
-    elog(LOG, "RelationGetRelid(heap)=%u RelationGetRelid(index)=%u",
-         RelationGetRelid(heap), RelationGetRelid(index));
     BuildIndex(heap, index, indexInfo, &buildstate, MAIN_FORKNUM);
 
     result = (IndexBuildResult *)palloc(sizeof(IndexBuildResult));
