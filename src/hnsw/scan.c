@@ -17,8 +17,8 @@
 
 bool ldb_amcanreturn(Relation indexRelation, int attno)
 {
-    LDB_UNUSED(indexRelation);
-    return true;
+    LDB_UNUSED(attno);
+    return indexRelation->rd_index->indnatts > 1;
 }
 
 /*

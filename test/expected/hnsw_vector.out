@@ -91,10 +91,10 @@ FROM small_world ORDER BY v <-> '[0,1,0]'::VECTOR LIMIT 7;
 
 EXPLAIN (COSTS FALSE) SELECT ROUND(l2sq_dist(v, '[0,1,0]'::VECTOR)::numeric, 2) as dist
 FROM small_world ORDER BY v <-> '[0,1,0]'::VECTOR LIMIT 7;
-                          QUERY PLAN                          
---------------------------------------------------------------
+                       QUERY PLAN                        
+---------------------------------------------------------
  Limit
-   ->  Index Only Scan using small_world_v_idx on small_world
+   ->  Index Scan using small_world_v_idx on small_world
          Order By: (v <-> '[0,1,0]'::vector)
 (3 rows)
 
@@ -113,10 +113,10 @@ FROM small_world ORDER BY v <-> '[0,1,0]'::VECTOR LIMIT 7;
 
 EXPLAIN (COSTS FALSE) SELECT ROUND(l2sq_dist(v, '[0,1,0]'::VECTOR)::numeric, 2) as dist
 FROM small_world ORDER BY v <-> '[0,1,0]'::VECTOR LIMIT 7;
-                          QUERY PLAN                          
---------------------------------------------------------------
+                       QUERY PLAN                        
+---------------------------------------------------------
  Limit
-   ->  Index Only Scan using small_world_v_idx on small_world
+   ->  Index Scan using small_world_v_idx on small_world
          Order By: (v <-> '[0,1,0]'::vector)
 (3 rows)
 
